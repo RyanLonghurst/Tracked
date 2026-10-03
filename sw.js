@@ -1,6 +1,6 @@
 // Keeps the app working with no signal. Bump the version to force a refresh of cached files.
-const CACHE = 'logbook-v1';
-const SHELL = ['./', 'index.html', 'html5-qrcode.min.js', 'manifest.webmanifest', 'icon.png'];
+const CACHE = 'logbook-v2';
+const SHELL = ['./', 'index.html', 'zxing-reader.js', 'zxing_reader.wasm', 'manifest.webmanifest', 'icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

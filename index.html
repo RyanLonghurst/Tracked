@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Logbook</title>
 <meta name="theme-color" content="#10161F">
 <meta name="mobile-web-app-capable" content="yes">
@@ -20,7 +20,7 @@
   --protein:#FF8C7A; --carbs:#74B8FF; --fat:#F5D565;
   --p:0;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:pan-x pan-y}
 html,body{height:100%;margin:0}
 body{
   background:var(--bg);color:var(--text);
@@ -70,7 +70,13 @@ body[data-tab="0"] .tabs button:nth-child(1),body[data-tab="1"] .tabs button:nth
 .ex{background:var(--panel);border-radius:18px;padding:16px;margin-bottom:12px}
 .exh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .exh h3{font-size:19px;letter-spacing:-.01em}
-.exh button{color:var(--mute);font-size:14px;padding:4px 0 4px 10px}
+.exh button{color:var(--acc);font-weight:600;padding:2px 0 4px 12px}
+.exrow{display:flex;justify-content:space-between;align-items:baseline;gap:14px;width:100%;padding:14px 16px;background:var(--panel);border-radius:14px;margin-bottom:8px}
+.exrow b{flex:0 0 auto;max-width:58%;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exrow span{flex:1;min-width:0;text-align:right;color:var(--mute);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exrow span.today{color:var(--text);font-weight:600}
+.exfoot{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.exfoot .rm{color:var(--mute);font-size:14px;padding:8px 0}
 .last{font-size:14px;color:var(--mute);margin-top:4px}
 .last b{color:var(--text);font-weight:600}
 .note{margin:12px 0 4px;padding:10px 12px;border-left:3px solid var(--acc);background:var(--panel2);border-radius:0 10px 10px 0;font-size:14px;white-space:pre-wrap;display:block;width:100%}
@@ -88,7 +94,7 @@ textarea{width:100%;min-height:92px;margin:12px 0 4px;padding:10px 12px;border-r
 .set.done .tick{background:var(--acc);border-color:var(--acc);color:#10161F}
 .set.done .field input{border-color:transparent;background:var(--panel2)}
 .del{height:44px;color:var(--mute);text-align:center;font-size:20px}
-.addset{margin-top:8px;color:var(--acc);font-weight:600;padding:8px 0}
+.addset{color:var(--acc);font-weight:600;padding:8px 0}
 .next{margin-top:22px}
 .sug{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:13px 16px;border-radius:14px;border:1px solid var(--line);margin-bottom:8px}
 .sug b{font-weight:600}
@@ -150,12 +156,17 @@ body.sheet #sheet{transform:none}
 .chip{padding:9px 13px;border-radius:999px;border:1px solid var(--line);font-size:14px}
 .chip.on{background:var(--acc);border-color:var(--acc);color:#10161F;font-weight:600}
 .lab{display:block;font-size:13px;color:var(--mute);margin:12px 0 5px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;align-items:end}
 .per{color:var(--mute);font-size:14px}
 .calc{font-size:17px;font-weight:600;margin:12px 0 2px}
 .msg{padding:10px 12px;border-radius:10px;background:var(--panel2);font-size:14px;margin-bottom:10px}
-#reader{width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:180px;margin-bottom:10px}
-#reader video{display:block}
+.cam{position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:10px}
+.cam video{width:100%;height:100%;object-fit:cover;display:block}
+.cam .frame{position:absolute;left:6%;right:6%;top:27%;bottom:27%;border:2px solid var(--acc);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+.camtools{position:absolute;right:10px;bottom:10px;display:flex;gap:8px}
+.camtools button{padding:8px 12px;border-radius:999px;background:rgba(16,22,31,.85);font-size:14px;font-weight:600}
+.gf.auto .lab::after{content:" (calculated)";color:var(--acc)}
+.nr.plain{border-bottom:1px solid var(--panel2)}
 details summary{color:var(--acc);font-weight:600;padding:14px 0 2px;cursor:pointer}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translate(-50%,20px);background:var(--text);color:#10161F;padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:all .2s;white-space:nowrap}
 #toast.on{opacity:1;transform:translate(-50%,0)}
@@ -181,7 +192,7 @@ details summary{color:var(--acc);font-weight:600;padding:14px 0 2px;cursor:point
 <div id="sheet" role="dialog" aria-modal="true"></div>
 <div id="toast" role="status"></div>
 <input type="file" id="file" accept="application/json,.json" hidden>
-<script src="html5-qrcode.min.js"></script>
+<script src="zxing-reader.js"></script>
 <script>
 'use strict';
 /* ---------- helpers ---------- */
@@ -192,7 +203,7 @@ const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const num=v=>{v=parseFloat(String(v==null?'':v).replace(',','.'));return isFinite(v)?v:null};
 const dayKey=d=>{d=new Date(d);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const f0=v=>Math.round(v||0).toLocaleString('en-GB');
-const f1=v=>v>=100?String(Math.round(v)):String(Math.round(v*10)/10);
+const f1=v=>v>=100?String(Math.round(v)):v>=1||v===0?String(Math.round(v*10)/10):String(Math.round(v*100)/100);
 const pct=(v,g)=>g>0?Math.min(100,Math.round((v||0)/g*100)):0;
 const shortDate=t=>new Date(t).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
 const dur=ms=>{const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),p=n=>String(n).padStart(2,'0');return (h?h+':':'')+p(m)+':'+p(s%60)};
@@ -212,24 +223,49 @@ const SEED={
 const MEALS=['Breakfast','Lunch','Dinner','Snacks'];
 /* per 100 g. off = Open Food Facts field, m = multiplier from grams, ref = daily reference, max = it is a limit */
 const NUTS=[
-  {k:'kcal',l:'Calories',u:'kcal'},
-  {k:'protein',l:'Protein',u:'g',off:'proteins'},
-  {k:'carbs',l:'Carbs',u:'g',off:'carbohydrates'},
-  {k:'fat',l:'Fat',u:'g',off:'fat'},
-  {k:'fibre',l:'Fibre',u:'g',off:'fiber',ref:30},
-  {k:'sugars',l:'Sugars',u:'g',off:'sugars',ref:90,max:1},
-  {k:'satfat',l:'Saturated fat',u:'g',off:'saturated-fat',ref:20,max:1},
-  {k:'salt',l:'Salt',u:'g',off:'salt',ref:6,max:1},
-  {k:'potassium',l:'Potassium',u:'mg',off:'potassium',m:1e3,ref:2000},
-  {k:'calcium',l:'Calcium',u:'mg',off:'calcium',m:1e3,ref:800},
-  {k:'magnesium',l:'Magnesium',u:'mg',off:'magnesium',m:1e3,ref:375},
-  {k:'iron',l:'Iron',u:'mg',off:'iron',m:1e3,ref:14},
-  {k:'zinc',l:'Zinc',u:'mg',off:'zinc',m:1e3,ref:10},
-  {k:'vitc',l:'Vitamin C',u:'mg',off:'vitamin-c',m:1e3,ref:80},
-  {k:'vita',l:'Vitamin A',u:'µg',off:'vitamin-a',m:1e6,ref:800},
-  {k:'vitd',l:'Vitamin D',u:'µg',off:'vitamin-d',m:1e6,ref:10},
-  {k:'b12',l:'Vitamin B12',u:'µg',off:'vitamin-b12',m:1e6,ref:2.5}
+  {k:'kcal',l:'Calories',u:'kcal',g:'main'},
+  {k:'protein',l:'Protein',u:'g',g:'main',off:'proteins'},
+  {k:'carbs',l:'Carbs',u:'g',g:'main',off:'carbohydrates'},
+  {k:'fat',l:'Fat',u:'g',g:'main',off:'fat'},
+  {k:'fibre',l:'Fibre',u:'g',g:'more',off:'fiber',ref:30},
+  {k:'sugars',l:'Sugars',u:'g',g:'more',off:'sugars',ref:90,max:1},
+  {k:'satfat',l:'Saturated fat',u:'g',g:'more',off:'saturated-fat',ref:30,max:1},
+  {k:'monofat',l:'Monounsaturated fat',u:'g',g:'more',off:'monounsaturated-fat'},
+  {k:'polyfat',l:'Polyunsaturated fat',u:'g',g:'more',off:'polyunsaturated-fat'},
+  {k:'omega3',l:'Omega-3',u:'g',g:'more',off:'omega-3-fat'},
+  {k:'transfat',l:'Trans fat',u:'g',g:'more',off:'trans-fat',ref:5,max:1},
+  {k:'cholesterol',l:'Cholesterol',u:'mg',g:'more',off:'cholesterol',m:1e3,ref:300,max:1},
+  {k:'salt',l:'Salt',u:'g',g:'more',off:'salt',ref:6,max:1},
+  {k:'caffeine',l:'Caffeine',u:'mg',g:'more',off:'caffeine',m:1e3,ref:400,max:1},
+  {k:'vita',l:'Vitamin A',u:'µg',g:'vit',off:'vitamin-a',m:1e6,ref:800},
+  {k:'b1',l:'Thiamin (B1)',u:'mg',g:'vit',off:'vitamin-b1',m:1e3,ref:1.1},
+  {k:'b2',l:'Riboflavin (B2)',u:'mg',g:'vit',off:'vitamin-b2',m:1e3,ref:1.4},
+  {k:'b3',l:'Niacin (B3)',u:'mg',g:'vit',off:'vitamin-pp',m:1e3,ref:16},
+  {k:'b5',l:'Pantothenic acid (B5)',u:'mg',g:'vit',off:'pantothenic-acid',m:1e3,ref:6},
+  {k:'b6',l:'Vitamin B6',u:'mg',g:'vit',off:'vitamin-b6',m:1e3,ref:1.4},
+  {k:'b7',l:'Biotin (B7)',u:'µg',g:'vit',off:'biotin',m:1e6,ref:50},
+  {k:'b9',l:'Folate (B9)',u:'µg',g:'vit',off:'vitamin-b9',alt:'folates',m:1e6,ref:200},
+  {k:'b12',l:'Vitamin B12',u:'µg',g:'vit',off:'vitamin-b12',m:1e6,ref:2.5},
+  {k:'vitc',l:'Vitamin C',u:'mg',g:'vit',off:'vitamin-c',m:1e3,ref:80},
+  {k:'vitd',l:'Vitamin D',u:'µg',g:'vit',off:'vitamin-d',m:1e6,ref:10},
+  {k:'vite',l:'Vitamin E',u:'mg',g:'vit',off:'vitamin-e',m:1e3,ref:12},
+  {k:'vitk',l:'Vitamin K',u:'µg',g:'vit',off:'vitamin-k',m:1e6,ref:75},
+  {k:'calcium',l:'Calcium',u:'mg',g:'min',off:'calcium',m:1e3,ref:800},
+  {k:'chloride',l:'Chloride',u:'mg',g:'min',off:'chloride',m:1e3,ref:800},
+  {k:'chromium',l:'Chromium',u:'µg',g:'min',off:'chromium',m:1e6,ref:40},
+  {k:'copper',l:'Copper',u:'mg',g:'min',off:'copper',m:1e3,ref:1},
+  {k:'fluoride',l:'Fluoride',u:'mg',g:'min',off:'fluoride',m:1e3,ref:3.5},
+  {k:'iodine',l:'Iodine',u:'µg',g:'min',off:'iodine',m:1e6,ref:150},
+  {k:'iron',l:'Iron',u:'mg',g:'min',off:'iron',m:1e3,ref:14},
+  {k:'magnesium',l:'Magnesium',u:'mg',g:'min',off:'magnesium',m:1e3,ref:375},
+  {k:'manganese',l:'Manganese',u:'mg',g:'min',off:'manganese',m:1e3,ref:2},
+  {k:'molybdenum',l:'Molybdenum',u:'µg',g:'min',off:'molybdenum',m:1e6,ref:50},
+  {k:'phosphorus',l:'Phosphorus',u:'mg',g:'min',off:'phosphorus',m:1e3,ref:700},
+  {k:'potassium',l:'Potassium',u:'mg',g:'min',off:'potassium',m:1e3,ref:2000},
+  {k:'selenium',l:'Selenium',u:'µg',g:'min',off:'selenium',m:1e6,ref:55},
+  {k:'zinc',l:'Zinc',u:'mg',g:'min',off:'zinc',m:1e3,ref:10}
 ];
+const NGROUPS=[['more','Fibre, fats and salt'],['vit','Vitamins'],['min','Minerals']];
 const KEY='logbook.v1';
 function fresh(){
   const ex={};for(const g in SEED)SEED[g].forEach(n=>{ex[slug(n)]={name:n,group:g,setup:''}});
@@ -238,7 +274,7 @@ function fresh(){
 function load(){try{const t=localStorage.getItem(KEY);return t?JSON.parse(t):null}catch(e){return null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let S=Object.assign(fresh(),load()||{});
-const ui={day:dayKey(new Date()),meal:'Breakfast',cur:null,editNote:null,off:[],offState:''};
+const ui={day:dayKey(new Date()),meal:'Breakfast',cur:null,editNote:null,open:null,gt:[],off:[],offState:''};
 
 /* ---------- workout logic ---------- */
 function lastOf(id){
@@ -281,9 +317,7 @@ function suggest(){
 function addExercise(id){
   if(!S.active)return;
   S.active.items.push({ex:id,sets:[{w:'',r:'',done:false}]});
-  save();closeSheet();renderWorkout();
-  const cards=document.querySelectorAll('#pw .ex');const c=cards[cards.length-1];
-  if(c&&c.scrollIntoView)c.scrollIntoView({block:'start'});
+  ui.open=null;ui.editNote=null;save();closeSheet();renderWorkout();
 }
 function ghost(item,j){  // what to show as placeholder for set j
   const l=lastOf(item.ex);
@@ -319,9 +353,10 @@ function renderWorkout(){
       <button class="btn primary small" data-act="finish">Finish workout</button>
     </div>
     ${a.items.map((it,i)=>{
-      const ex=S.exercises[it.ex],l=lastOf(it.ex);
+      const ex=S.exercises[it.ex],l=lastOf(it.ex),done=it.sets.filter(s=>s.r!=='');
+      if(ui.open!==i)return `<button class="exrow" data-act="openex" data-i="${i}"><b>${esc(ex.name)}</b>${done.length?`<span class="today">${done.map(setTxt).join(', ')}</span>`:`<span>${l?'Last '+l.sets.map(setTxt).join(', '):'First time'}</span>`}</button>`;
       return `<article class="ex" data-i="${i}">
-        <div class="exh"><h3>${esc(ex.name)}</h3><button data-act="rmex">Remove</button></div>
+        <div class="exh"><h3>${esc(ex.name)}</h3><button data-act="closeex">Done</button></div>
         <p class="last">${l?`Last time, ${shortDate(l.date)}: <b>${l.sets.map(setTxt).join(', ')}</b>${l.sets[0].w!==''?' kg':''}`:'Nothing logged for this yet.'}</p>
         ${ui.editNote===it.ex
           ?`<textarea data-setup="${it.ex}" placeholder="Seat height, pin position, grip, foot placement, cable attachment">${esc(ex.setup)}</textarea><button class="addset" data-act="notedone">Save setup notes</button>`
@@ -335,7 +370,7 @@ function renderWorkout(){
             <button class="tick" data-act="tick" aria-label="Mark set done">✓</button>
             <button class="del" data-act="rmset" aria-label="Delete set">−</button>
           </div>`}).join('')}</div>
-        <button class="addset" data-act="addset">Add set</button>
+        <div class="exfoot"><button class="addset" data-act="addset">Add set</button><button class="rm" data-act="rmex">Remove exercise</button></div>
       </article>`}).join('')}
     <div class="next">
       ${sug.length?`<h2 style="margin-top:0">${a.items.length?'Next up':'Start with'}</h2>`+sug.map(s=>`<button class="sug" data-act="addex" data-id="${s.id}"><b>${esc(S.exercises[s.id].name)}</b><span>${s.t}</span></button>`).join(''):''}
@@ -376,7 +411,7 @@ function fromOFF(p,code){
   NUTS.forEach(d=>{
     let v;
     if(d.k==='kcal'){v=num(nm['energy-kcal_100g']);if(v==null&&num(nm.energy_100g)!=null)v=num(nm.energy_100g)/4.184}
-    else{v=num(nm[d.off+'_100g']);if(v==null&&d.k==='salt'&&num(nm.sodium_100g)!=null)v=num(nm.sodium_100g)*2.5;if(v!=null)v*=d.m||1}
+    else{v=num(nm[d.off+'_100g']);if(v==null&&d.alt)v=num(nm[d.alt+'_100g']);if(v==null&&d.k==='salt'&&num(nm.sodium_100g)!=null)v=num(nm.sodium_100g)*2.5;if(v!=null)v*=d.m||1}
     n[d.k]=v;
   });
   code=String(code||p.code||'');
@@ -427,12 +462,11 @@ function renderNutrition(){
         ${l.map(e=>`<button class="ent" data-act="editentry" data-id="${e.id}"><div><b>${esc(e.name)}</b><small>${esc(e.brand?e.brand+', ':'')}${f1(e.g)} g</small></div><span class="k">${f0((e.n.kcal||0)*e.g/100)}</span></button>`).join('')}
         <button class="addfood" data-act="addfood" data-m="${m}">Add food</button>
       </section>`}).join('')}
-    <h2>Nutrients</h2>
-    ${NUTS.slice(4).map(n=>{const v=t[n.k]||0,has=c[n.k]||0,over=n.max&&v>n.ref;return `
-      <div class="nr"><span>${n.l}</span><span class="v">${ents.length&&!has?'<small>no data</small>':f1(v)+' '+n.u} <small>${n.max?'limit':'of'} ${n.ref} ${n.u}</small></span>
-        <div class="bar ${over?'over':''}"><i style="width:${pct(v,n.ref)}%"></i></div>
+    ${NGROUPS.map(([g,title])=>`<h2>${title}</h2>`+NUTS.filter(n=>n.g===g).map(n=>{const v=t[n.k]||0,has=c[n.k]||0,over=n.max&&v>n.ref;return `
+      <div class="nr"><span>${n.l}</span><span class="v">${ents.length&&!has?'<small>no data</small>':f1(v)+' '+n.u}${n.ref?` <small>${n.max?'limit':'of'} ${n.ref} ${n.u}</small>`:''}</span>
+        ${n.ref?`<div class="bar ${over?'over':''}"><i style="width:${pct(v,n.ref)}%"></i></div>`:''}
         ${ents.length&&has<ents.length&&has>0?`<span class="cov">Listed on ${has} of ${ents.length} foods today</span>`:''}
-      </div>`}).join('')}
+      </div>`}).join('')).join('')}
     <p class="hint">UK labels rarely list vitamins and minerals, so those rows only count foods where the data exists.</p>`;
 }
 function renderFoodList(){
@@ -487,45 +521,133 @@ function openManual(food,msg){
     <span class="lab">Barcode (optional)</span><input class="inp" id="m_code" type="text" inputmode="numeric" value="${esc(food.code||'')}">
     <h2 style="margin:18px 0 0">Per 100 g</h2>
     <div class="grid2">${NUTS.slice(0,4).map(fld).join('')}</div>
-    <details><summary>More nutrients (optional)</summary><div class="grid2">${NUTS.slice(4).map(fld).join('')}</div></details>
+    <details><summary>More nutrients (optional)</summary>${NGROUPS.map(([g,title])=>`<h2 style="margin:16px 0 0">${title}</h2><div class="grid2">${NUTS.filter(n=>n.g===g).map(fld).join('')}</div>`).join('')}</details>
     <button class="btn primary" style="margin-top:18px" data-act="savemanual">Save food</button>`);
 }
 
 /* ---------- scanner ---------- */
-let scanner=null,scanBusy=false;
-async function stopScan(){
-  const s=scanner;scanner=null;if(!s)return;
-  try{await s.stop()}catch(e){}
-  try{s.clear()}catch(e){}
+let scan=null;
+function stopScan(){
+  const s=scan;scan=null;if(!s)return;
+  clearTimeout(s.t);
+  if(s.stream)s.stream.getTracks().forEach(t=>t.stop());
 }
-function openScan(){
-  scanBusy=false;
-  sheet(`<div class="shh"><h3>Scan barcode</h3><button data-act="close">Close</button></div>
-    <div id="reader"></div><p class="per" id="scanmsg">Hold the barcode steady inside the frame.</p>
-    <div class="row" style="margin-top:12px"><input class="inp" id="code" type="text" inputmode="numeric" placeholder="Or type the barcode number"><button class="btn small fit" data-act="codego">Look up</button></div>`);
-  if(!window.Html5Qrcode){$('#scanmsg').textContent='The camera scanner did not load. Type the number printed under the barcode instead.';return}
-  const F=window.Html5QrcodeSupportedFormats;
+function validCode(c){   // EAN-13 and EAN-8 check digit
+  if(!/^(\d{8}|\d{13})$/.test(c))return false;
+  const d=c.split('').map(Number),chk=d.pop();
+  const sum=d.reverse().reduce((s,n,i)=>s+n*(i%2?1:3),0);
+  return (10-sum%10)%10===chk;
+}
+async function getDetector(){   // returns read(canvas, ctx) -> array of digit strings
   try{
-    scanner=new Html5Qrcode('reader',{formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E],experimentalFeatures:{useBarCodeDetectorIfSupported:true},verbose:false});
-    scanner.start({facingMode:'environment'},
-      {fps:12,qrbox:(w,h)=>({width:Math.max(120,Math.floor(w*0.86)),height:Math.max(80,Math.floor(Math.min(h*0.55,170)))})},
-      async code=>{if(scanBusy)return;scanBusy=true;if(navigator.vibrate)navigator.vibrate(40);await stopScan();lookup(code)},
-      ()=>{}
-    ).catch(()=>{const m=$('#scanmsg');if(m)m.textContent='Camera not available. Allow camera access for this site, or type the barcode number.'});
-  }catch(e){$('#scanmsg').textContent='Camera not available. Type the barcode number instead.'}
+    if('BarcodeDetector' in window){   // built into Chrome on Android
+      const sup=await window.BarcodeDetector.getSupportedFormats();
+      if(sup.includes('ean_13')){
+        const d=new window.BarcodeDetector({formats:['ean_13','ean_8'].filter(f=>sup.includes(f))});
+        return async cv=>(await d.detect(cv)).map(r=>r.rawValue);
+      }
+    }
+  }catch(e){}
+  if(window.ZXingWASM){                // everything else, including iPhone
+    ZXingWASM.prepareZXingModule({overrides:{locateFile:(p,pre)=>p.endsWith('.wasm')?'zxing_reader.wasm':pre+p}});
+    const opt={formats:['EAN-13','EAN-8'],tryHarder:true,tryRotate:true,tryDownscale:true,tryInvert:false,maxNumberOfSymbols:1};
+    return async(cv,ctx)=>(await ZXingWASM.readBarcodes(ctx.getImageData(0,0,cv.width,cv.height),opt)).map(r=>r.text);
+  }
+  return null;
+}
+const camOpts=id=>({audio:false,video:Object.assign({width:{ideal:1920},height:{ideal:1080}},id?{deviceId:{exact:id}}:{facingMode:{ideal:'environment'}})});
+async function openScan(){
+  stopScan();
+  sheet(`<div class="shh"><h3>Scan barcode</h3><button data-act="close">Close</button></div>
+    <div class="cam"><video id="cam" playsinline muted autoplay></video><div class="frame"></div>
+      <div class="camtools"><button id="zoomb" hidden>Zoom out</button><button id="torchb" hidden>Light on</button></div></div>
+    <p class="per" id="scanmsg">Starting camera.</p>
+    <div class="row" style="margin-top:12px"><input class="inp" id="code" type="text" inputmode="numeric" placeholder="Or type the barcode number"><button class="btn small fit" data-act="codego">Look up</button></div>`);
+  const say=m=>{const e=$('#scanmsg');if(e)e.textContent=m};
+  const md=navigator.mediaDevices;
+  if(!md||!md.getUserMedia)return say('This browser cannot open the camera. Type the barcode number instead.');
+  const my=scan={};
+  try{
+    my.stream=await md.getUserMedia(camOpts());
+    // iPhones with several rear lenses: the combined camera focuses much closer than the default one
+    const devs=await md.enumerateDevices();
+    const best=[/back triple/i,/back dual wide/i,/back dual/i].map(r=>devs.find(d=>d.kind==='videoinput'&&r.test(d.label))).find(Boolean);
+    const cur=my.stream.getVideoTracks()[0].getSettings().deviceId;
+    if(best&&best.deviceId&&best.deviceId!==cur){
+      my.stream.getTracks().forEach(t=>t.stop());
+      my.stream=await md.getUserMedia(camOpts(best.deviceId)).catch(()=>md.getUserMedia(camOpts()));
+    }
+  }catch(e){
+    if(scan===my)scan=null;
+    return say('Camera blocked. Allow camera access for this site in your browser settings, or type the barcode number.');
+  }
+  if(scan!==my){my.stream.getTracks().forEach(t=>t.stop());return}
+  const v=$('#cam');v.srcObject=my.stream;try{await v.play()}catch(e){}
+  const track=my.stream.getVideoTracks()[0],caps=track.getCapabilities?track.getCapabilities():{};
+  const set=c=>track.applyConstraints({advanced:[c]}).catch(()=>{});
+  if(caps.focusMode&&caps.focusMode.includes('continuous'))await set({focusMode:'continuous'});
+  if(caps.zoom&&caps.zoom.max>=2){
+    my.zoom=2;await set({zoom:2});
+    const z=$('#zoomb');z.hidden=false;
+    z.onclick=()=>{my.zoom=my.zoom===2?Math.max(1,caps.zoom.min||1):2;set({zoom:my.zoom});z.textContent=my.zoom===2?'Zoom out':'Zoom in'};
+  }
+  if(caps.torch){
+    const b=$('#torchb');b.hidden=false;
+    b.onclick=()=>{my.torch=!my.torch;set({torch:my.torch});b.textContent=my.torch?'Light off':'Light on'};
+  }
+  const read=await getDetector();
+  if(!read)return say('The scanner did not load. Type the barcode number instead.');
+  say('Line the barcode up in the box, about a hand\'s length from the phone.');
+  const cv=document.createElement('canvas'),ctx=cv.getContext('2d',{willReadFrequently:true});
+  const votes={};let n=0;
+  const tick=async()=>{
+    if(scan!==my)return;
+    if(v.readyState>=2&&v.videoWidth){
+      try{
+        // Decode the middle of the full-resolution frame. Every other pass takes a tighter crop and
+        // doubles it, which rescues small or slightly soft barcodes.
+        const big=n++%2===1,W=v.videoWidth,H=v.videoHeight;
+        const sw=Math.floor(W*(big?0.7:0.92)),sh=Math.floor(H*(big?0.36:0.5)),k=big?2:1;
+        cv.width=sw*k;cv.height=sh*k;ctx.imageSmoothingQuality='high';
+        ctx.drawImage(v,(W-sw)>>1,(H-sh)>>1,sw,sh,0,0,sw*k,sh*k);
+        (await read(cv,ctx)).filter(validCode).forEach(c=>{votes[c]=(votes[c]||0)+1});
+        // A blurry frame can produce a wrong number that still passes the check digit, so wait for
+        // the same number three times and a clear lead over anything else seen.
+        const rank=Object.entries(votes).sort((a,b)=>b[1]-a[1]);
+        if(rank[0]&&rank[0][1]>=3&&rank[0][1]-(rank[1]?rank[1][1]:0)>=2&&scan===my){
+          if(navigator.vibrate)navigator.vibrate(40);stopScan();return lookup(rank[0][0]);
+        }
+      }catch(e){}
+    }
+    my.t=setTimeout(tick,80);
+  };
+  tick();
 }
 
 /* ---------- sheets ---------- */
 function sheet(html){$('#sheet').innerHTML='<div class="grab"></div>'+html;$('#sheet').scrollTop=0;document.body.classList.add('sheet')}
 function closeSheet(){stopScan();document.body.classList.remove('sheet')}
 function openSettings(){
-  const G=S.goals;
+  const G=S.goals;ui.gt=['kcal','protein','carbs','fat'];
   sheet(`<div class="shh"><h3>Daily goals</h3><button data-act="close">Close</button></div>
-    <div class="grid2">${['kcal','protein','carbs','fat'].map(k=>{const d=NUTS.find(n=>n.k===k);return `<label><span class="lab">${d.l} (${d.u})</span><input class="inp" id="g_${k}" type="text" inputmode="numeric" value="${G[k]}"></label>`}).join('')}</div>
-    <button class="btn primary" style="margin-top:18px" data-act="savegoals">Save goals</button>
+    <div class="grid2">${ui.gt.map(k=>{const d=NUTS.find(n=>n.k===k);return `<label class="gf" data-k="${k}"><span class="lab">${d.l} (${d.u})</span><input class="inp" id="g_${k}" data-goal="${k}" type="text" inputmode="numeric" value="${G[k]}"></label>`}).join('')}</div>
+    <p class="hint" id="ghint">Change any three and the fourth is worked out for you. To pick which one is calculated, clear its box.</p>
+    <button class="btn primary" style="margin-top:14px" data-act="savegoals">Save goals</button>
     <h2>Backup</h2>
     <p class="per">Everything is stored on this phone only. Export a backup now and then, and before clearing browser data.</p>
     <div class="row" style="margin-top:12px"><button class="btn" data-act="export">Export backup</button><button class="btn" data-act="import">Restore backup</button></div>`);
+}
+function goalCalc(k){   // the box touched least recently (or the empty one) is calculated from the other three
+  const gt=ui.gt,val=x=>num($('#g_'+x).value);
+  gt.splice(gt.indexOf(k),1);if(val(k)==null)gt.unshift(k);else gt.push(k);
+  const a=gt[0];
+  document.querySelectorAll('#sheet .gf').forEach(l=>l.classList.toggle('auto',l.dataset.k===a));
+  if(gt.slice(1).some(x=>val(x)==null))return;
+  const p=val('protein'),c=val('carbs'),f=val('fat'),kc=val('kcal');
+  const r=a==='kcal'?4*p+4*c+9*f:a==='protein'?(kc-4*c-9*f)/4:a==='carbs'?(kc-4*p-9*f)/4:(kc-4*p-4*c)/9;
+  $('#g_'+a).value=Math.max(0,Math.round(r));
+  $('#ghint').textContent=r<0?'Those macros already add up to more than the calorie goal.'
+    :NUTS.find(n=>n.k===a).l+' is calculated from the other three: 4 kcal per gram of protein and carbs, 9 per gram of fat.';
 }
 
 /* ---------- actions ---------- */
@@ -534,12 +656,14 @@ const ACT={
   tab:b=>goTab(+b.dataset.t,true),
   close:closeSheet,
   settings:openSettings,
-  start(){S.active={id:uid(),start:Date.now(),items:[]};save();renderWorkout()},
+  start(){S.active={id:uid(),start:Date.now(),items:[]};ui.open=null;save();renderWorkout()},
+  openex(b){ui.open=+b.dataset.i;ui.editNote=null;renderWorkout()},
+  closeex(){ui.open=null;ui.editNote=null;renderWorkout()},
   discard(){if(confirm('Discard this workout? Nothing from it will be saved.')){S.active=null;save();renderWorkout()}},
   finish(){
     const a=S.active,items=a.items.map(it=>({ex:it.ex,sets:it.sets.filter(s=>s.r!=='').map(s=>({w:s.w,r:s.r}))})).filter(it=>it.sets.length);
     if(!items.length){if(confirm('No sets with reps logged. Discard this workout?')){S.active=null;save();renderWorkout()}return}
-    S.workouts.push({id:a.id,start:a.start,end:Date.now(),items});S.active=null;ui.editNote=null;save();renderWorkout();toast('Workout saved');
+    S.workouts.push({id:a.id,start:a.start,end:Date.now(),items});S.active=null;ui.editNote=null;ui.open=null;save();renderWorkout();toast('Workout saved');
   },
   delworkout(b){if(confirm('Delete this workout from your history?')){S.workouts=S.workouts.filter(w=>w.id!==b.dataset.id);save();renderWorkout()}},
   pick(){sheet(`<div class="shh"><h3>Add exercise</h3><button data-act="close">Close</button></div><input class="inp" id="q" type="search" placeholder="Search or create an exercise"><div id="plist"></div>`);renderPick()},
@@ -548,7 +672,7 @@ const ACT={
     const name=$('#q').value.trim();if(!name)return;let id=slug(name)||uid();if(S.exercises[id])id+='-'+uid();
     S.exercises[id]={name,group:b.dataset.g,setup:''};addExercise(id);
   },
-  rmex(b){const {item,i}=at(b);if(!item.sets.some(s=>s.r!=='')||confirm('Remove this exercise and its sets?')){S.active.items.splice(i,1);save();renderWorkout()}},
+  rmex(b){const {item,i}=at(b);if(!item.sets.some(s=>s.r!=='')||confirm('Remove this exercise and its sets?')){S.active.items.splice(i,1);ui.open=null;save();renderWorkout()}},
   addset(b){at(b).item.sets.push({w:'',r:'',done:false});save();renderWorkout()},
   rmset(b){const {item,j}=at(b);item.sets.splice(j,1);save();renderWorkout()},
   tick(b){
@@ -593,7 +717,7 @@ const ACT={
     const e=entryId&&(S.log[ui.day]||[]).find(x=>x.id===entryId);
     openAmount(f,e||undefined);
   },
-  savegoals(){['kcal','protein','carbs','fat'].forEach(k=>{const v=num($('#g_'+k).value);if(v>0)S.goals[k]=v});save();closeSheet();renderNutrition();toast('Goals saved')},
+  savegoals(){['kcal','protein','carbs','fat'].forEach(k=>{const v=num($('#g_'+k).value);if(v>=0&&v!=null)S.goals[k]=Math.round(v)});save();closeSheet();renderNutrition();toast('Goals saved')},
   export(){
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));
     a.download='logbook-backup-'+dayKey(new Date())+'.json';document.body.appendChild(a);a.click();a.remove();
@@ -608,6 +732,7 @@ document.addEventListener('input',e=>{
   else if(t.id==='q')renderPick();
   else if(t.id==='fq'){ui.off=[];ui.offState='';renderFoodList()}
   else if(t.id==='amt')updAmt();
+  else if(t.dataset.goal)goalCalc(t.dataset.goal);
 });
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;
@@ -638,6 +763,8 @@ pager.addEventListener('scroll',()=>{
   document.documentElement.style.setProperty('--p',p.toFixed(3));
   if(String(t)!==document.body.dataset.tab){document.body.dataset.tab=t;S.tab=t;save()}
 },{passive:true});
+
+document.addEventListener('gesturestart',e=>e.preventDefault());   // iOS pinch
 
 /* ---------- boot ---------- */
 renderWorkout();renderNutrition();
