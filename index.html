@@ -71,10 +71,14 @@ body[data-tab="0"] .tabs button:nth-child(1),body[data-tab="1"] .tabs button:nth
 .exh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .exh h3{font-size:19px;letter-spacing:-.01em}
 .exh button{color:var(--acc);font-weight:600;padding:2px 0 4px 12px}
-.exrow{display:flex;justify-content:space-between;align-items:baseline;gap:14px;width:100%;padding:14px 16px;background:var(--panel);border-radius:14px;margin-bottom:8px}
-.exrow b{flex:0 0 auto;max-width:58%;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.exrow span{flex:1;min-width:0;text-align:right;color:var(--mute);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.exrow span.today{color:var(--text);font-weight:600}
+.exrow{display:flex;align-items:stretch;background:var(--panel);border-radius:14px;margin-bottom:8px}
+.grip{flex:0 0 42px;display:grid;place-items:center;color:var(--mute);font-size:18px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab}
+.exopen{flex:1;min-width:0;display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:14px 16px 14px 0}
+.exopen b{flex:0 0 auto;max-width:58%;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exopen .exsum{flex:1;min-width:0;text-align:right;color:var(--mute);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exopen .exsum.today{color:var(--text);font-weight:600}
+.drag{position:relative;z-index:2;outline:2px solid var(--acc);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.drag .grip{color:var(--acc)}
 .exfoot{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
 .exfoot .rm{color:var(--mute);font-size:14px;padding:8px 0}
 .last{font-size:14px;color:var(--mute);margin-top:4px}
@@ -354,7 +358,7 @@ function renderWorkout(){
     </div>
     ${a.items.map((it,i)=>{
       const ex=S.exercises[it.ex],l=lastOf(it.ex),done=it.sets.filter(s=>s.r!=='');
-      if(ui.open!==i)return `<button class="exrow" data-act="openex" data-i="${i}"><b>${esc(ex.name)}</b>${done.length?`<span class="today">${done.map(setTxt).join(', ')}</span>`:`<span>${l?'Last '+l.sets.map(setTxt).join(', '):'First time'}</span>`}</button>`;
+      if(ui.open!==i)return `<div class="exrow" data-i="${i}"><span class="grip" role="button" aria-label="Drag to reorder">≡</span><button class="exopen" data-act="openex"><b>${esc(ex.name)}</b>${done.length?`<span class="exsum today">${done.map(setTxt).join(', ')}</span>`:`<span class="exsum">${l?'Last '+l.sets.map(setTxt).join(', '):'First time'}</span>`}</button></div>`;
       return `<article class="ex" data-i="${i}">
         <div class="exh"><h3>${esc(ex.name)}</h3><button data-act="closeex">Done</button></div>
         <p class="last">${l?`Last time, ${shortDate(l.date)}: <b>${l.sets.map(setTxt).join(', ')}</b>${l.sets[0].w!==''?' kg':''}`:'Nothing logged for this yet.'}</p>
@@ -657,7 +661,7 @@ const ACT={
   close:closeSheet,
   settings:openSettings,
   start(){S.active={id:uid(),start:Date.now(),items:[]};ui.open=null;save();renderWorkout()},
-  openex(b){ui.open=+b.dataset.i;ui.editNote=null;renderWorkout()},
+  openex(b){ui.open=at(b).i;ui.editNote=null;renderWorkout()},
   closeex(){ui.open=null;ui.editNote=null;renderWorkout()},
   discard(){if(confirm('Discard this workout? Nothing from it will be saved.')){S.active=null;save();renderWorkout()}},
   finish(){
@@ -751,6 +755,36 @@ $('#file').addEventListener('change',e=>{
   };
   r.readAsText(f);
 });
+
+/* ---------- drag to reorder exercises ---------- */
+let drag=null;
+const exRows=()=>[...document.querySelectorAll('#pw > [data-i]')];
+document.addEventListener('pointerdown',e=>{
+  const g=e.target.closest('.grip');if(!g||!S.active)return;
+  e.preventDefault();
+  drag={row:g.closest('[data-i]'),id:e.pointerId};drag.row.classList.add('drag');
+  try{g.setPointerCapture(e.pointerId)}catch(x){}
+});
+document.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerId!==drag.id)return;
+  e.preventDefault();
+  const page=$('#pw'),pb=page.getBoundingClientRect();
+  if(e.clientY<pb.top+50)page.scrollTop-=10;else if(e.clientY>pb.bottom-50)page.scrollTop+=10;
+  for(const r of exRows()){
+    if(r===drag.row)continue;
+    const b=r.getBoundingClientRect();
+    if(e.clientY>b.top&&e.clientY<b.bottom){r.parentNode.insertBefore(drag.row,e.clientY<b.top+b.height/2?r:r.nextSibling);break}
+  }
+});
+const dragEnd=e=>{
+  if(!drag||e.pointerId!==drag.id)return;
+  const items=S.active.items,open=ui.open!=null?items[ui.open]:null;
+  S.active.items=exRows().map(r=>items[+r.dataset.i]);
+  ui.open=open?S.active.items.indexOf(open):null;
+  drag=null;save();renderWorkout();
+};
+document.addEventListener('pointerup',dragEnd);
+document.addEventListener('pointercancel',dragEnd);
 
 /* ---------- tabs ---------- */
 const pager=$('#pager');
